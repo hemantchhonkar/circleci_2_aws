@@ -28,31 +28,33 @@ jobs:
          key: v1-dependencies-{{ checksum "pom.xml" }}
       # run tests!
      - run: mvn integration-test
-     - run: 
-        name: build docker
-        command: |
-                 mvn install
-                 docker build -t 463442625423.dkr.ecr.us-east-2.amazonaws.com/yello-team-client-mgmt-repo:$CIRCLE_SHA1 .
-                 docker build -t 463442625423.dkr.ecr.us-east-2.amazonaws.com/yello-team-client-mgmt-repo:latest .
-     - run:
-        name: Run docker
-        command: |
-                docker run -d -p 8081:8081 --name yello-team 463442625423.dkr.ecr.us-east-2.amazonaws.com/yello-team-client-mgmt-repo:$CIRCLE_SHA1; sleep 10
-                chmod +x ./deploy.sh 
+
+     
  deploy:
-   machine:
-     services:
-       - docker
-   dependencies:
-      post:
-        - mvn install
-        - docker build -t 463442625423.dkr.ecr.us-east-2.amazonaws.com/yello-team-client-mgmt-repo:$CIRCLE_SHA1 .
-        - docker build -t 463442625423.dkr.ecr.us-east-2.amazonaws.com/yello-team-client-mgmt-repo:latest .
-   test:
-     post:
-        - docker run -d -p 8081:8081 --name yello-team 463442625423.dkr.ecr.us-east-2.amazonaws.com/yello-team-client-mgmt-repo:$CIRCLE_SHA1; sleep 10
-        - chmod +x ./deploy.sh
-        - ./deploy.sh
+    machine:
+        enabled: true
+    working_directory: ~/circleci-demo-workflows
+    steps:
+     - checkout
+     - run:
+        name: Moven install
+        command: mvn install
+     - run:
+        name: Docker build 
+        command: docker build -t 463442625423.dkr.ecr.us-east-2.amazonaws.com/yello-team-client-mgmt-repo:$CIRCLE_SHA1 .
+     - run:
+        name: Docker build latest
+        command: docker build -t 463442625423.dkr.ecr.us-east-2.amazonaws.com/yello-team-client-mgmt-repo:latest .
+     - run:
+        name: Docker run
+        command: docker run -d -p 8081:8081 --name yello-team 463442625423.dkr.ecr.us-east-2.amazonaws.com/yello-team-client-mgmt-repo:$CIRCLE_SHA1; sleep 10
+     - run:  
+        name: Change script permissions
+        command: chmod +x ./deploy.sh
+     - run:
+        name: Deply script
+        command: ./deploy.sh
+     
 
 workflows:
   version: 2
